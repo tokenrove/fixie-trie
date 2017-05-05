@@ -1,0 +1,10 @@
+[package]
+name = "fixie-trie"
+version = "0.1.0"
+authors = ["Julian Squires <julian@cipht.net>"]
+publish = false
+
+[dependencies]
+
+[dev-dependencies]
+quickcheck = "0.4.1"
