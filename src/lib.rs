@@ -326,7 +326,12 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     /// sorted order.
     pub fn iter(&'a self) -> Iter<'a, K, V> {
         Iter {
-            stack: vec![(K::empty(), 0, 0, self.root)],
+            stack: vec![Iteration {
+                key: K::empty(),
+                level: 0,
+                bits: 0,
+                place: self.root,
+            }],
             phantom: PhantomData,
         }
     }
@@ -381,9 +386,16 @@ impl<K, V> Drop for FixieTrie<K, V> where K: FixedLengthKey {
      }
 }
 
+struct Iteration<K> {
+    key: K,
+    level: usize,
+    bits: u32,
+    place: TriePtr,
+}
+
 /// Iterator over a fixie trie.
 pub struct Iter<'a, K, V> where K: 'a, V: 'a {
-    stack: Vec<(K, usize, u32, TriePtr)>,
+    stack: Vec<Iteration<K>>,
     phantom: PhantomData<&'a (K, V)>,
 }
 
@@ -391,37 +403,48 @@ impl<'a, K: 'a, V: 'a> Iterator for Iter<'a, K, V> where K: FixedLengthKey {
     type Item = (K, &'a V);
 
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some((mut key, level, bits, p)) = self.stack.pop() {
-            assert!(level <= K::levels());
-            assert!(bits < 16);
-            if is_empty(p) { return None }
-            if !is_branch(p) { // leaf
+        while let Some(it) = self.stack.pop() {
+            let mut key = it.key;
+            assert!(it.level <= K::levels());
+            assert!(it.bits < 16);
+            if is_empty(it.place) { return None }
+            if !is_branch(it.place) { // leaf
                 // figure out our depth
-                if level == K::levels() {
+                if it.level == K::levels() {
                     // just V
-                    if let Some(value) = FixieTrie::<K,V>::value_of_leaf(p) {
+                    if let Some(value) = FixieTrie::<K,V>::value_of_leaf(it.place) {
                         return Some((key, value))
                     }
                 } else {
-                    if let Some(kv) = FixieTrie::<K,V>::tuple_of_leaf(p) {
+                    if let Some(kv) = FixieTrie::<K,V>::tuple_of_leaf(it.place) {
                         return Some((kv.0, &kv.1))
                     }
                 }
                 continue;
             }
 
-            let mask = (1<<bits)-1;
-            let bitmap = bitmap_of_branch(p) & !mask;
+            let mask = (1<<it.bits)-1;
+            let bitmap = bitmap_of_branch(it.place) & !mask;
             let next_bits = bitmap.trailing_zeros();
             if next_bits >= 16 { continue; }
             let mask = (1<<next_bits)-1;
-            let idx = (bitmap_of_branch(p) & mask).count_ones();
+            let idx = (bitmap_of_branch(it.place) & mask).count_ones();
             if next_bits < 15 {
-                self.stack.push((key, level, 1+next_bits, p));
+                self.stack.push(Iteration {
+                    key: it.key,
+                    level: it.level,
+                    bits: 1+next_bits,
+                    place: it.place
+                });
             }
             unsafe {
                 key.concat_nibble(next_bits as u8);
-                self.stack.push((key, 1+level, 0, *ptr_of_branch(p).offset(idx as isize)));
+                self.stack.push(Iteration {
+                    key: key,
+                    level: 1+it.level,
+                    bits: 0,
+                    place: *ptr_of_branch(it.place).offset(idx as isize)
+                });
             }
         }
         None
