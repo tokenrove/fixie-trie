@@ -27,7 +27,7 @@ use std::marker::PhantomData;
 #[cfg(all(target_pointer_width = "64", target_arch = "x86_64"))]
 type TriePtr = u64;
 
-/// A key that can be used with a FixieTrie.  We need to be able to
+/// A key that can be used with a `FixieTrie`.  We need to be able to
 /// get nibbles out of it and reconstruct it from nibbles.
 ///
 /// XXX Properly the construction interface should be something
@@ -104,7 +104,7 @@ fn bits_in_branch(p: TriePtr, bit: u8) -> Option<usize> {
     assert!(bit < 16);
     let i = 1_u64 << bit;
     if i != map & i { return None }
-    return Some((map & (i-1)).count_ones() as usize)
+    Some((map & (i-1)).count_ones() as usize)
 }
 
 #[test]
@@ -173,28 +173,28 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     }
 
     fn branch_elt(p: TriePtr, level: usize, key: &K) -> Option<TriePtr> {
-        if let Some(i) = bits_in_branch(p, key.nibble(level)) {
-            Some(twigs_of_branch(p)[i])
-        } else { None }
+        bits_in_branch(p, key.nibble(level)).map(|i| twigs_of_branch(p)[i])
     }
 
     /// Gets the value associated with `key`.
     pub fn get(&self, key: &K) -> Option<&V> {
         let mut p = self.root;
-        for level in 0..K::levels() {
-            if !is_branch(p) {
-                return match Self::tuple_of_leaf(p) {
-                    Some(&(ref other_key, ref value)) if key == other_key =>
-                        Some(&value),
-                    _ => None,
-                }
-            }
+        let mut level = 0;
+        while is_branch(p) {
+            assert!(level < K::levels());
             if let Some(q) = Self::branch_elt(p, level, key) {
                 p = q;
             } else { return None }
+            level += 1;
         }
-        assert!(!is_branch(p));
-        Self::value_of_leaf(p)
+
+        if level == K::levels() { return Self::value_of_leaf(p) }
+
+        match Self::tuple_of_leaf(p) {
+            Some(&(ref other_key, ref value)) if key == other_key =>
+                Some(value),
+            _ => None,
+        }
     }
 
     // extend the trie a level
@@ -231,7 +231,59 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     /// Inserts a mapping from `key`to `value`, returning the old
     /// value associated with `key` if there was one.
     pub fn insert(&mut self, key: K, value: V) -> Option<V> {
-        Self::inner_insert(&mut self.root, 0, key, value)
+        let mut place = &mut self.root;
+        let mut level = 0;
+        while is_branch(*place) {
+            let bits = key.nibble(level);
+            if let Some(i) = bits_in_branch(*place, bits) {
+                place = &mut twigs_of_branch(*place)[i];
+                level += 1;
+            } else {
+                *place = Self::expand_branch(*place, level, key, value);
+                return None
+            }
+        }
+
+        if level == K::levels() { // final level, _has_ to be just a *V
+            return Self::value_of_leaf_mut(*place).map(|p| mem::replace(p, value))
+        }
+
+        if let Some(&mut (other_key, ref mut old_value)) = Self::tuple_of_leaf_mut(*place) {
+            if key == other_key {
+                return Some(mem::replace(old_value, value))
+            }
+
+            loop {
+                let old_bits = other_key.nibble(level);
+                if key.nibble(level) != old_bits { break; }
+                place = unsafe { Self::leaf_into_branch(place, old_bits).as_mut().unwrap() };
+                level += 1;
+            }
+            assert!(level < K::levels());
+
+            if level == K::levels()-1 {
+                *place = Self::tuple_into_value(*place);
+            }
+
+            let new_branch = unsafe {
+                heap::allocate(2*mem::size_of::<TriePtr>(),
+                               mem::align_of::<TriePtr>()) as *mut TriePtr
+            };
+            assert!(!new_branch.is_null());
+
+            let new_bits = key.nibble(level);
+            let old_bits = other_key.nibble(level);
+            let (old_idx, new_idx) =
+                if new_bits > old_bits { (0,1) } else { (1,0) };
+            unsafe {
+                ptr::write(new_branch.offset(new_idx), Self::new_twig(level, key, value));
+                ptr::write(new_branch.offset(old_idx), *place);
+            };
+            *place = encode_branch((1<<new_bits) | (1<<old_bits), new_branch as TriePtr);
+        } else {
+            *place = Self::new_tuple_twig(key, value);
+        }
+        None
     }
 
     fn expand_branch(branch: TriePtr, level: usize, key: K, value: V) -> TriePtr {
@@ -253,59 +305,6 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
                       count - idx as usize);
             ptr::write(new.offset(idx), Self::new_twig(level, key, value));
             encode_branch(bitmap, new as u64)
-        }
-    }
-
-    fn inner_insert(place: &mut TriePtr, level: usize, key: K, value: V) -> Option<V> {
-        if level == K::levels() { // final level, _has_ to be just a *V
-            assert!(!is_branch(*place));
-            Self::value_of_leaf_mut(*place).map(|p| mem::replace(p, value))
-        } else if is_branch(*place) {
-            let bits = key.nibble(level);
-            if let Some(i) = bits_in_branch(*place, bits) {
-                return Self::inner_insert(&mut twigs_of_branch(*place)[i],
-                                          1+level, key, value);
-            }
-            *place = Self::expand_branch(*place, level, key, value);
-            None
-        } else {
-            match Self::tuple_of_leaf_mut(*place) {
-                Some(&mut (other_key, ref mut old_value)) if key == other_key =>
-                    Some(mem::replace(old_value, value)),
-                None => {
-                    *place = Self::new_tuple_twig(key, value);
-                    None
-                },
-                Some(&mut (other_key, _)) => {
-                    if level == K::levels()-1 {
-                        *place = Self::tuple_into_value(*place);
-                    }
-
-                    let new_bits = key.nibble(level);
-                    let old_bits = other_key.nibble(level);
-                    if new_bits == old_bits {
-                        let p = unsafe { Self::leaf_into_branch(place, old_bits).as_mut() };
-                        return Self::inner_insert(p.unwrap(),
-                                                  1+level,
-                                                  key, value);
-                    }
-
-                    let q = unsafe {
-                        heap::allocate(2*mem::size_of::<TriePtr>(),
-                                       mem::align_of::<TriePtr>()) as *mut TriePtr
-                    };
-                    assert!(!q.is_null());
-
-                    let (old_idx, new_idx) =
-                        if new_bits > old_bits { (0,1) } else { (1,0) };
-                    unsafe {
-                        ptr::write(q.offset(new_idx), Self::new_twig(level, key, value));
-                        ptr::write(q.offset(old_idx), *place);
-                    };
-                    *place = encode_branch((1<<new_bits) | (1<<old_bits), q as TriePtr);
-                    None
-                },
-            }
         }
     }
 
