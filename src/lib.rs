@@ -21,7 +21,7 @@ extern crate quickcheck;
 extern crate alloc;
 
 use alloc::heap;
-use std::{fmt, mem, ptr, slice};
+use std::{mem, ptr, slice};
 use std::marker::PhantomData;
 
 #[cfg(all(target_pointer_width = "64", target_arch = "x86_64"))]
@@ -32,7 +32,7 @@ type TriePtr = u64;
 ///
 /// XXX Properly the construction interface should be something
 /// cleaner rather requiring you to mutate an instance of this.
-pub trait FixedLengthKey: PartialEq + Copy + fmt::Debug {
+pub trait FixedLengthKey: PartialEq + Copy {
     /// How many nibbles are in this key?
     fn levels() -> usize;
     /// The `idx`th nibble.
@@ -49,11 +49,11 @@ pub trait FixedLengthKey: PartialEq + Copy + fmt::Debug {
 macro_rules! trivial_fixed_length_key_impl {
     ($($name:ident,)*) => {
         $(#[allow(trivial_numeric_casts)] impl FixedLengthKey for $name {
-            fn levels() -> usize { mem::size_of::<Self>() << 1 }
+            fn levels() -> usize { 2 * mem::size_of::<Self>() }
             fn nibble(&self, idx: usize) -> u8 {
                 ((*self >> (4*(Self::levels()-idx-1))) & 15) as u8
             }
-            fn empty() -> Self { 0_u8.into() }
+            fn empty() -> Self { 0 }
             fn concat_nibble(&mut self, nibble: u8) {
                 *self = (*self << 4) | (nibble as Self)
             }
@@ -67,10 +67,9 @@ trivial_fixed_length_key_impl! {
 }
 
 /// A popcount-array radix trie with fixed-length keys.
-pub struct FixieTrie<K, V> where K: FixedLengthKey, V: fmt::Debug {
+pub struct FixieTrie<K, V> where K: FixedLengthKey {
     root: TriePtr,
-    phantom_k: PhantomData<K>,
-    phantom_v: PhantomData<V>,
+    phantom: PhantomData<(K, V)>,
 }
 
 fn is_empty(p: TriePtr) -> bool { 0 == p }
@@ -110,23 +109,21 @@ fn bits_in_branch(p: TriePtr, bit: u8) -> Option<usize> {
 
 #[test]
 fn bits_in_branch_sanity_checks() {
-    assert_eq!(None, bits_in_branch(1, 0b0100));
-    assert_eq!(Some(0), bits_in_branch(0b0000_0000_0001_0000 << 48 | 1,
+    assert_eq!(None, bits_in_branch(encode_branch(0,0), 0b0100));
+    assert_eq!(None, bits_in_branch(encode_branch(0b0000_0000_0001_0000, 0),
+                                    0b0101));
+    assert_eq!(Some(0), bits_in_branch(encode_branch(0b0000_0000_0001_0000, 0),
                                        0b0100));
-    assert_eq!(Some(0), bits_in_branch(0b0000_0000_0001_0000 << 48 | 1,
-                                       0b0100));
-    assert_eq!(Some(4), bits_in_branch(0b0000_0000_0001_1111 << 48 | 1,
+    assert_eq!(Some(4), bits_in_branch(encode_branch(0b0000_0000_0001_1111, 0),
                                        0b0100));
 }
 
-impl<'a, K, V> FixieTrie<K, V>
-    where K: FixedLengthKey, V: fmt::Debug {
+impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     /// Constructs an empty fixie trie.
     pub fn new() -> Self {
         Self {
             root: 0,
-            phantom_k: PhantomData,
-            phantom_v: PhantomData
+            phantom: PhantomData,
         }
     }
 
@@ -330,15 +327,12 @@ impl<'a, K, V> FixieTrie<K, V>
     pub fn iter(&'a self) -> Iter<'a, K, V> {
         Iter {
             stack: vec![(K::empty(), 0, 0, self.root)],
-            phantom_a: PhantomData,
-            phantom_k: PhantomData,
-            phantom_v: PhantomData,
+            phantom: PhantomData,
         }
     }
 }
 
-impl<K, V> Drop for FixieTrie<K, V>
-    where K: FixedLengthKey, V: fmt::Debug {
+impl<K, V> Drop for FixieTrie<K, V> where K: FixedLengthKey {
     fn drop(&mut self) {
         let mut stack = vec![(0,0,self.root)];
         while let Some((bits, level, p)) = stack.pop() {
@@ -390,13 +384,10 @@ impl<K, V> Drop for FixieTrie<K, V>
 /// Iterator over a fixie trie.
 pub struct Iter<'a, K, V> where K: 'a, V: 'a {
     stack: Vec<(K, usize, u32, TriePtr)>,
-    phantom_a: PhantomData<&'a TriePtr>,
-    phantom_k: PhantomData<K>,
-    phantom_v: PhantomData<V>,
+    phantom: PhantomData<&'a (K, V)>,
 }
 
-impl<'a, K: 'a, V: 'a> Iterator for Iter<'a, K, V>
-    where K: FixedLengthKey, V: fmt::Debug {
+impl<'a, K: 'a, V: 'a> Iterator for Iter<'a, K, V> where K: FixedLengthKey {
     type Item = (K, &'a V);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -442,8 +433,7 @@ pub struct Keys<'a, K: 'a, V: 'a> {
     inner: Iter<'a, K, V>,
 }
 
-impl<'a, K: 'a, V: 'a> Iterator for Keys<'a, K, V>
-    where K: FixedLengthKey, V: fmt::Debug {
+impl<'a, K: 'a, V: 'a> Iterator for Keys<'a, K, V> where K: FixedLengthKey {
     type Item = K;
 
     fn next(&mut self) -> Option<Self::Item> {
