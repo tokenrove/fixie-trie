@@ -4,7 +4,11 @@ version = "0.1.0"
 authors = ["Julian Squires <julian@cipht.net>"]
 publish = false
 
+[features]
+i128 = []
+
 [dependencies]
 
 [dev-dependencies]
 quickcheck = "0.4.1"
+rand = "*"

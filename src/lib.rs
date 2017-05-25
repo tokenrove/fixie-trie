@@ -10,6 +10,7 @@
 )]
 
 #![feature(alloc, heap_api)]
+#![cfg_attr(feature = "i128", feature(i128_type))]
 
 // For valgrind, because of rust-lang/rust#28224
 //#![cfg_attr(test, feature(alloc_system))]
@@ -17,6 +18,8 @@
 #[cfg(test)]
 #[macro_use]
 extern crate quickcheck;
+#[cfg(all(feature = "i128", test))]
+extern crate rand;
 
 extern crate alloc;
 
@@ -64,6 +67,10 @@ macro_rules! trivial_fixed_length_key_impl {
 trivial_fixed_length_key_impl! {
     u8, u16, u32, u64,
     i16, i32, i64,
+}
+#[cfg(feature = "i128")]
+trivial_fixed_length_key_impl! {
+    i128, u128,
 }
 
 /// A popcount-array radix trie with fixed-length keys.
@@ -530,6 +537,17 @@ mod test {
         fn u16_insertion(v: Vec<(u16,u64)>) -> bool { insertion_test(v) }
         fn u32_insertion(v: Vec<(u32,u64)>) -> bool { insertion_test(v) }
         fn u64_insertion(v: Vec<(u64,u64)>) -> bool { insertion_test(v) }
+
+        #[cfg(feature = "i128")]
+        fn u128_insertion(v: Vec<u32>) -> bool {
+            // TODO BurntSushi/quickcheck#162
+            use rand::Rng;
+            let mut gen = ::rand::thread_rng();
+            insertion_test(v.iter()
+                           .map(|value| ((gen.next_u64() as u128) << 64 |
+                                         gen.next_u64() as u128, value))
+                           .collect::<Vec<_>>())
+        }
 
         fn iteration_over_elements_in_sorted_order(v: Vec<u64>) -> bool {
             let mut t = FixieTrie::new();
