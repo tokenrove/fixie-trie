@@ -176,22 +176,39 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
         bits_in_branch(p, key.nibble(level)).map(|i| twigs_of_branch(p)[i])
     }
 
-    /// Gets the value associated with `key`.
-    pub fn get(&self, key: &K) -> Option<&V> {
+    fn find_leaf_and_level(&self, key: &K) -> (TriePtr, usize) {
         let mut p = self.root;
         let mut level = 0;
         while is_branch(p) {
             assert!(level < K::levels());
             if let Some(q) = Self::branch_elt(p, level, key) {
                 p = q;
-            } else { return None }
+            } else { return (0, level) }
             level += 1;
         }
+        (p, level)
+    }
 
+    /// Gets the value associated with `key`.
+    pub fn get(&self, key: &K) -> Option<&V> {
+        let (p, level) = self.find_leaf_and_level(key);
+        if p == 0 { return None }
         if level == K::levels() { return Self::value_of_leaf(p) }
 
         match Self::tuple_of_leaf(p) {
             Some(&(ref other_key, ref value)) if key == other_key =>
+                Some(value),
+            _ => None,
+        }
+    }
+
+    /// Gets the value associated with `key`.
+    pub fn get_mut(&self, key: &K) -> Option<&mut V> {
+        let (p, level) = self.find_leaf_and_level(key);
+        if p == 0 { return None }
+        if level == K::levels() { return Self::value_of_leaf_mut(p) }
+        match Self::tuple_of_leaf_mut(p) {
+            Some(&mut (ref other_key, ref mut value)) if key == other_key =>
                 Some(value),
             _ => None,
         }
