@@ -482,6 +482,16 @@ impl<'a, K: 'a, V: 'a> Iterator for Keys<'a, K, V> where K: FixedLengthKey {
     }
 }
 
+impl<'a, K, V> IntoIterator for &'a FixieTrie<K, V>
+    where K: FixedLengthKey {
+    type Item = (K, &'a V);
+    type IntoIter = Iter<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::{FixieTrie, FixedLengthKey};
