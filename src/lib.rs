@@ -24,7 +24,7 @@ extern crate rand;
 extern crate alloc;
 
 use alloc::heap;
-use std::{mem, ptr, slice};
+use std::{fmt, mem, ptr, slice};
 use std::marker::PhantomData;
 
 #[cfg(all(target_pointer_width = "64", target_arch = "x86_64"))]
@@ -407,6 +407,14 @@ impl<K, V> Drop for FixieTrie<K, V> where K: FixedLengthKey {
             }
         }
      }
+}
+
+impl<K, V> fmt::Debug for FixieTrie<K, V>
+    where K: FixedLengthKey + fmt::Debug,
+          V: fmt::Debug {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> std::result::Result<(), fmt::Error> {
+        fmt.debug_map().entries(self.into_iter()).finish()
+    }
 }
 
 struct Iteration<K> {
