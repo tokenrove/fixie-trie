@@ -210,7 +210,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     }
 
     /// Gets the value associated with `key`.
-    pub fn get_mut(&self, key: &K) -> Option<&mut V> {
+    pub fn get_mut(&mut self, key: &K) -> Option<&mut V> {
         let (p, level) = self.find_leaf_and_level(key);
         if p == 0 { return None }
         if level == K::levels() { return Self::value_of_leaf_mut(p) }
