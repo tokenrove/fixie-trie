@@ -252,7 +252,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
         }
     }
 
-    /// Inserts a mapping from `key`to `value`, returning the old
+    /// Inserts a mapping from `key` to `value`, returning the old
     /// value associated with `key` if there was one.
     pub fn insert(&mut self, key: K, value: V) -> Option<V> {
         let mut place = &mut self.root;
@@ -533,7 +533,7 @@ mod test {
         assert!(t.keys().zip(0..u16::MAX).all(|(a,b)| a == b));
     }
 
-    fn insertion_test<K,V>(v: Vec<(K,V)>) -> bool
+    fn insertion_test_helper<K,V>(v: Vec<(K,V)>) -> bool
         where K: FixedLengthKey + Ord,
               V: PartialEq + fmt::Debug {
         let mut t = FixieTrie::new();
@@ -552,9 +552,9 @@ mod test {
             true
         }
 
-        fn u16_insertion(v: Vec<(u16,u64)>) -> bool { insertion_test(v) }
-        fn u32_insertion(v: Vec<(u32,u64)>) -> bool { insertion_test(v) }
-        fn u64_insertion(v: Vec<(u64,u64)>) -> bool { insertion_test(v) }
+        fn u16_insertion(v: Vec<(u16,u64)>) -> bool { insertion_test_helper(v) }
+        fn u32_insertion(v: Vec<(u32,u64)>) -> bool { insertion_test_helper(v) }
+        fn u64_insertion(v: Vec<(u64,u64)>) -> bool { insertion_test_helper(v) }
 
         #[cfg(feature = "i128")]
         fn u128_insertion(v: Vec<u32>) -> bool {
