@@ -1,3 +1,10 @@
+
+> By their very nature, maps were always works in progress, and Gentle
+> – his resolve strengthened by thinking of them that way – decided
+> after many months of delay to turn his hand to making one.
+
+  — Imajica
+
 An implementation of "fixie tries", inspired by Tony Finch's
 [qp-tries] but for fixed-length keys, storing the key implicitly in
 the trie where possible.
