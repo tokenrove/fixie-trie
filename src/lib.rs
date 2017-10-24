@@ -9,7 +9,7 @@
     variant_size_differences,
 )]
 
-#![feature(alloc, heap_api)]
+#![feature(allocator_api)]
 #![cfg_attr(feature = "i128", feature(i128_type))]
 
 // For valgrind, because of rust-lang/rust#28224
@@ -21,9 +21,8 @@ extern crate quickcheck;
 #[cfg(all(feature = "i128", test))]
 extern crate rand;
 
-extern crate alloc;
+use std::heap::{Heap, Alloc, Layout};
 
-use alloc::heap;
 use std::{fmt, mem, ptr, slice};
 use std::marker::PhantomData;
 
@@ -125,6 +124,26 @@ fn bits_in_branch_sanity_checks() {
                                        0b0100));
 }
 
+fn layout(size: usize, align: usize) -> Layout {
+    Layout::from_size_align(size, align).expect("Invalid memory layout.")
+}
+
+#[inline]
+unsafe fn allocate(size: usize, align: usize) -> *mut u8 {
+    Heap.alloc(layout(size, align)).expect("Heap allocation failed.")
+}
+
+#[inline]
+unsafe fn reallocate(ptr: *mut u8, old_size: usize, new_size: usize, align: usize) -> *mut u8 {
+    Heap.realloc(ptr, layout(old_size, align), layout(new_size, align))
+        .expect("Heap reallocation failed.")
+}
+
+#[inline]
+unsafe fn deallocate(ptr: *mut u8, size: usize, align: usize) {
+    Heap.dealloc(ptr, layout(size, align));
+}
+
 impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     /// Constructs an empty fixie trie.
     pub fn new() -> Self {
@@ -136,8 +155,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
 
     fn new_tuple_twig(key: K, value: V) -> TriePtr {
         unsafe {
-            let p = heap::allocate(mem::size_of::<(K,V)>(),
-                                   mem::align_of::<(K,V)>()) as *mut (K,V);
+            let p = allocate(mem::size_of::<(K,V)>(), mem::align_of::<(K,V)>()) as *mut (K,V);
             assert!(!p.is_null());
             ptr::write(p, (key, value));
             p as u64
@@ -147,8 +165,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     fn new_value(value: V) -> TriePtr {
         if mem::size_of::<V>() == 0 { return 0 }
         unsafe {
-            let new = heap::allocate(mem::size_of::<V>(),
-                                     mem::align_of::<V>()) as *mut V;
+            let new = allocate(mem::size_of::<V>(), mem::align_of::<V>()) as *mut V;
             assert!(!new.is_null());
             ptr::write(new, value);
             new as TriePtr
@@ -224,9 +241,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     // extend the trie a level
     fn leaf_into_branch(p: *mut TriePtr, old_bits: u8) -> *mut TriePtr {
         unsafe {
-            let q =
-                heap::allocate(mem::size_of::<TriePtr>(),
-                               mem::align_of::<TriePtr>()) as *mut TriePtr;
+            let q = allocate(mem::size_of::<TriePtr>(), mem::align_of::<TriePtr>()) as *mut TriePtr;
             assert!(!q.is_null());
             ptr::write(q, mem::replace(p.as_mut().unwrap(),
                                        encode_branch((1<<old_bits), q as TriePtr)));
@@ -245,7 +260,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
         unsafe {
             let (_key, value) = ptr::read(p as *mut (K,V));
             let new = Self::new_value(value);
-            heap::deallocate(p as *mut u8,
+            deallocate(p as *mut u8,
                              mem::size_of::<(K,V)>(),
                              mem::align_of::<(K,V)>());
             new
@@ -290,7 +305,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
             }
 
             let new_branch = unsafe {
-                heap::allocate(2*mem::size_of::<TriePtr>(),
+                allocate(2*mem::size_of::<TriePtr>(),
                                mem::align_of::<TriePtr>()) as *mut TriePtr
             };
             assert!(!new_branch.is_null());
@@ -319,7 +334,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
         let bitmap = bitmap | 1<<bits;
         let idx = (bitmap & ((1<<bits) - 1)).count_ones() as isize;
         unsafe {
-            let new = heap::reallocate(ptr_of_branch(branch) as *mut u8,
+            let new = reallocate(ptr_of_branch(branch) as *mut u8,
                                        old_size,
                                        old_size + tptr_size,
                                        mem::align_of::<TriePtr>()) as *mut TriePtr;
@@ -380,7 +395,7 @@ impl<K, V> Drop for FixieTrie<K, V> where K: FixedLengthKey {
                         (mem::size_of::<V>(), mem::align_of::<V>())
                     };
                 unsafe {
-                    heap::deallocate(p as *mut u8, size, align);
+                    deallocate(p as *mut u8, size, align);
                 };
                 continue;
             }
@@ -400,7 +415,7 @@ impl<K, V> Drop for FixieTrie<K, V> where K: FixedLengthKey {
             }
             if next_bits >= 15 {
                 unsafe {
-                    heap::deallocate(ptr_of_branch(p) as *mut u8,
+                    deallocate(ptr_of_branch(p) as *mut u8,
                                      mem::size_of::<TriePtr>() * branch_count(p),
                                      mem::align_of::<TriePtr>());
                 }
