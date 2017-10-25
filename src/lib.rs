@@ -13,9 +13,6 @@
 #![feature(unique)]
 #![cfg_attr(feature = "i128", feature(i128_type))]
 
-// For valgrind, because of rust-lang/rust#28224
-//#![cfg_attr(test, feature(alloc_system))]
-
 use std::heap::{Heap, Alloc};
 
 use std::{fmt, mem, ptr, slice};
