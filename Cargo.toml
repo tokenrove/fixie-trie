@@ -1,6 +1,6 @@
 [package]
 name = "fixie-trie"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Julian Squires <julian@cipht.net>"]
 publish = false
 
