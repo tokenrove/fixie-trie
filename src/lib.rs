@@ -9,7 +9,8 @@
     variant_size_differences,
 )]
 
-#![feature(alloc, heap_api)]
+#![feature(allocator_api)]
+#![feature(unique)]
 #![cfg_attr(feature = "i128", feature(i128_type))]
 
 // For valgrind, because of rust-lang/rust#28224
@@ -21,9 +22,8 @@ extern crate quickcheck;
 #[cfg(all(feature = "i128", test))]
 extern crate rand;
 
-extern crate alloc;
+use std::heap::{Heap, Alloc};
 
-use alloc::heap;
 use std::{fmt, mem, ptr, slice};
 use std::marker::PhantomData;
 
@@ -136,9 +136,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
 
     fn new_tuple_twig(key: K, value: V) -> TriePtr {
         unsafe {
-            let p = heap::allocate(mem::size_of::<(K,V)>(),
-                                   mem::align_of::<(K,V)>()) as *mut (K,V);
-            assert!(!p.is_null());
+            let p = Heap.alloc_one::<(K,V)>().unwrap().as_ptr();
             ptr::write(p, (key, value));
             p as u64
         }
@@ -147,9 +145,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     fn new_value(value: V) -> TriePtr {
         if mem::size_of::<V>() == 0 { return 0 }
         unsafe {
-            let new = heap::allocate(mem::size_of::<V>(),
-                                     mem::align_of::<V>()) as *mut V;
-            assert!(!new.is_null());
+            let new = Heap.alloc_one::<V>().unwrap().as_ptr();
             ptr::write(new, value);
             new as TriePtr
         }
@@ -224,10 +220,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     // extend the trie a level
     fn leaf_into_branch(p: *mut TriePtr, old_bits: u8) -> *mut TriePtr {
         unsafe {
-            let q =
-                heap::allocate(mem::size_of::<TriePtr>(),
-                               mem::align_of::<TriePtr>()) as *mut TriePtr;
-            assert!(!q.is_null());
+            let q = Heap.alloc_one::<TriePtr>().unwrap().as_ptr();
             ptr::write(q, mem::replace(p.as_mut().unwrap(),
                                        encode_branch((1<<old_bits), q as TriePtr)));
             q
@@ -245,9 +238,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
         unsafe {
             let (_key, value) = ptr::read(p as *mut (K,V));
             let new = Self::new_value(value);
-            heap::deallocate(p as *mut u8,
-                             mem::size_of::<(K,V)>(),
-                             mem::align_of::<(K,V)>());
+            Heap.dealloc_one(ptr::Unique::new(p as *mut (K,V)).unwrap());
             new
         }
     }
@@ -289,11 +280,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
                 *place = Self::tuple_into_value(*place);
             }
 
-            let new_branch = unsafe {
-                heap::allocate(2*mem::size_of::<TriePtr>(),
-                               mem::align_of::<TriePtr>()) as *mut TriePtr
-            };
-            assert!(!new_branch.is_null());
+            let new_branch = Heap.alloc_array::<TriePtr>(2).unwrap().as_ptr();
 
             let new_bits = key.nibble(level);
             let old_bits = other_key.nibble(level);
@@ -311,19 +298,14 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     }
 
     fn expand_branch(branch: TriePtr, level: usize, key: K, value: V) -> TriePtr {
-        let tptr_size = mem::size_of::<TriePtr>();
         let bitmap = bitmap_of_branch(branch);
         let count = bitmap.count_ones() as usize;
-        let old_size = count * tptr_size;
         let bits = key.nibble(level);
         let bitmap = bitmap | 1<<bits;
         let idx = (bitmap & ((1<<bits) - 1)).count_ones() as isize;
         unsafe {
-            let new = heap::reallocate(ptr_of_branch(branch) as *mut u8,
-                                       old_size,
-                                       old_size + tptr_size,
-                                       mem::align_of::<TriePtr>()) as *mut TriePtr;
-            assert!(!new.is_null());
+            let new = Heap.realloc_array(ptr::Unique::new(ptr_of_branch(branch)).unwrap(), count, 1+count)
+                .unwrap().as_ptr();
             ptr::copy(new.offset(idx),
                       new.offset(1+idx),
                       count - idx as usize);
@@ -367,21 +349,19 @@ impl<K, V> Drop for FixieTrie<K, V> where K: FixedLengthKey {
             assert!(bits < 16);
             if is_empty(p) { continue }
             if !is_branch(p) { // leaf
-                let (size, align) =
-                    if level < K::levels() {
-                        unsafe {
-                            let (_k,v) = ptr::read(p as *mut (K,V));
-                            mem::drop(v);
-                        };
-                        (mem::size_of::<(K,V)>(), mem::align_of::<(K,V)>())
-                    } else {
-                        if mem::size_of::<V>() == 0 { continue; }
-                        unsafe { ptr::drop_in_place(p as *mut V) };
-                        (mem::size_of::<V>(), mem::align_of::<V>())
-                    };
-                unsafe {
-                    heap::deallocate(p as *mut u8, size, align);
-                };
+                if level < K::levels() {
+                    unsafe {
+                        let (_k,v) = ptr::read(p as *mut (K,V));
+                        mem::drop(v);
+                        Heap.dealloc_one(ptr::Unique::new(p as *mut (K,V)).unwrap());
+                    }
+                } else {
+                    if mem::size_of::<V>() == 0 { continue; }
+                    unsafe {
+                        ptr::drop_in_place(p as *mut V);
+                        Heap.dealloc_one(ptr::Unique::new(p as *mut V).unwrap());
+                    }
+                }
                 continue;
             }
 
@@ -400,9 +380,9 @@ impl<K, V> Drop for FixieTrie<K, V> where K: FixedLengthKey {
             }
             if next_bits >= 15 {
                 unsafe {
-                    heap::deallocate(ptr_of_branch(p) as *mut u8,
-                                     mem::size_of::<TriePtr>() * branch_count(p),
-                                     mem::align_of::<TriePtr>());
+                    Heap.dealloc_array(ptr::Unique::new(ptr_of_branch(p)).unwrap(),
+                                       branch_count(p))
+                        .unwrap();
                 }
             }
         }
