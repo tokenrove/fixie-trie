@@ -151,5 +151,15 @@ quickcheck! {
         us.keys().zip(them.keys()).all(|(a,&b)| us.get(&a) == them.get(&b))
     }
 
-    // repeatedly replace key
+    fn repeatedly_replace_key(k: u32, vs: Vec<u32>, others: Vec<(u32,u32)>) -> bool {
+        let mut t = FixieTrie::new();
+        for (k,v) in others { t.insert(k,v); }
+        let last =
+            vs.iter().fold(t.get(&k).map(|&v|v), |expected_old, &v| {
+                let actual_old = t.insert(k, v);
+                assert_eq!(expected_old, actual_old);
+                Some(v)
+            });
+        t.get(&k) == last.as_ref()
+    }
 }
