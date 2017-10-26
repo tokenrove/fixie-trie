@@ -2,8 +2,10 @@
 
 #[macro_use]
 extern crate quickcheck;
-#[cfg(all(feature = "i128", test))]
+use quickcheck::{Arbitrary, Gen};
+
 extern crate rand;
+use rand::Rand;
 
 extern crate fixie_trie;
 use fixie_trie::{FixieTrie, FixedLengthKey};
@@ -46,6 +48,46 @@ fn insertion_test_helper<K,V>(v: Vec<(K,V)>) -> bool
     true
 }
 
+#[derive(Copy, Clone, Debug)]
+enum SetOperation<T: FixedLengthKey> {
+    Insert(T),
+    Remove(T),
+    Query(T),
+}
+
+impl<T: Arbitrary + FixedLengthKey + Rand> Arbitrary for SetOperation<T> {
+    fn arbitrary<G: Gen>(g: &mut G) -> SetOperation<T> {
+        use self::SetOperation::*;
+        match g.gen_range(0,3) {
+            0 => Insert(g.gen()),
+            1 => Remove(g.gen()),
+            2 => Query(g.gen()),
+            _ => panic!()
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+enum MapOperation<K: FixedLengthKey, V> {
+    Insert(K,V),
+    Remove(K),
+    Query(K),
+}
+
+impl<K,V> Arbitrary for MapOperation<K,V>
+    where K: Arbitrary + FixedLengthKey + Rand,
+          V: Arbitrary + Rand {
+    fn arbitrary<G: Gen>(g: &mut G) -> MapOperation<K,V> {
+        use self::MapOperation::*;
+        match g.gen_range(0,3) {
+            0 => Insert(g.gen(), g.gen()),
+            1 => Remove(g.gen()),
+            2 => Query(g.gen()),
+            _ => panic!()
+        }
+    }
+}
+
 quickcheck! {
     fn droppable_insertion(v: Vec<u64>) -> bool {
         {
@@ -77,6 +119,36 @@ quickcheck! {
         u.sort();
         u.dedup();
         t.keys().zip(u.iter()).all(|(a,&b)| a == b)
+    }
+
+    fn equivalence_with_set(ops: Vec<SetOperation<u16>>) -> bool {
+        use self::SetOperation::*;
+        let mut us = FixieTrie::new();
+        let mut them = ::std::collections::btree_set::BTreeSet::new();
+        for op in ops {
+            match op {
+                Insert(k) => { assert_eq!(us.insert(k, ()).is_none(), them.insert(k)) },
+                Remove(_k) => { //assert_eq!(us.remove(k), them.remove(k))
+                },
+                Query(k) => { assert_eq!(us.get(&k).is_some(), them.contains(&k)) },
+            }
+        }
+        us.keys().zip(them.iter()).all(|(a,&b)| a == b)
+    }
+
+    fn equivalence_with_map(ops: Vec<MapOperation<u32,u64>>) -> bool {
+        use self::MapOperation::*;
+        let mut us = FixieTrie::new();
+        let mut them = ::std::collections::btree_map::BTreeMap::new();
+        for op in ops {
+            match op {
+                Insert(k, v) => { assert_eq!(us.insert(k, v), them.insert(k,v)) },
+                Remove(_k) => { //assert_eq!(us.remove(k), them.remove(k))
+                },
+                Query(k) => { assert_eq!(us.get(&k), them.get(&k)) },
+            }
+        }
+        us.keys().zip(them.keys()).all(|(a,&b)| us.get(&a) == them.get(&b))
     }
 
     // repeatedly replace key
