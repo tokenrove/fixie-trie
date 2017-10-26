@@ -12,3 +12,4 @@ i128 = []
 [dev-dependencies]
 quickcheck = "0.4.1"
 rand = "*"
+qp-trie = "0.7.1"

@@ -9,7 +9,10 @@ An implementation of "fixie tries", inspired by Tony Finch's
 [qp-tries] but for fixed-length keys, storing the key implicitly in
 the trie where possible.
 
-*This needs benchmarks before you should even consider using it.*
+You can (and should) run the benchmarks with `benchmark.sh`.  This
+should tell you at least a little about how fixie tries fare, both in
+speed and memory consumption, on your system, at least for the cases
+of random insertions of certain sizes.
 
 There are countless trie variants, so although I'm giving this one a
 new name, it probably already exists in some form.
