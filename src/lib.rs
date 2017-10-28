@@ -183,6 +183,18 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
         (p, level)
     }
 
+    /// True if the trie contains `key`.
+    pub fn contains(&self, key: &K) -> bool {
+        let (p, level) = self.find_leaf_and_level(key);
+        if level == K::levels() { return true }
+        if p == 0 { return false }
+
+        match Self::tuple_of_leaf(p) {
+            Some(&(ref other_key, _)) if key == other_key => true,
+            _ => false,
+        }
+    }
+
     /// Gets the value associated with `key`.
     pub fn get(&self, key: &K) -> Option<&V> {
         let (p, level) = self.find_leaf_and_level(key);

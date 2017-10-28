@@ -33,9 +33,27 @@ fn explicit_drop_test() {
 fn full_occupancy() {
     let mut t = FixieTrie::new();
     for i in 0..=u16::max_value() {
-        assert_eq!(None, t.insert(i, Box::new(())));
+        assert_eq!(None, t.insert(i, ()));
     }
     assert!(t.keys().zip(0..=u16::max_value()).all(|(a,b)| a == b));
+    for i in 0..=u16::max_value() {
+        assert!(t.contains(&i));
+    }
+}
+
+#[test]
+fn full_occupancy_u8() {
+    let mut t = FixieTrie::new();
+    for i in 0..=u8::max_value() {
+        assert_eq!(None, t.insert(i, ()));
+        for j in 0..=i {
+            assert!(t.contains(&j), "{} {}", i, j);
+        }
+    }
+    assert!(t.keys().zip(0..=u8::max_value()).all(|(a,b)| a == b));
+    for i in 0..=u8::max_value() {
+        assert!(t.contains(&i), "{}", i);
+    }
 }
 
 fn insertion_test_helper<K,V>(v: Vec<(K,V)>) -> bool
@@ -130,7 +148,7 @@ quickcheck! {
                 Insert(k) => { assert_eq!(us.insert(k, ()).is_none(), them.insert(k)) },
                 Remove(_k) => { //assert_eq!(us.remove(k), them.remove(k))
                 },
-                Query(k) => { assert_eq!(us.get(&k).is_some(), them.contains(&k)) },
+                Query(k) => { assert_eq!(us.contains(&k), them.contains(&k)) },
             }
         }
         us.keys().zip(them.iter()).all(|(a,&b)| a == b)
@@ -162,4 +180,17 @@ quickcheck! {
             });
         t.get(&k) == last.as_ref()
     }
+}
+
+#[test]
+fn regression_on_sets() {
+    let mut t = FixieTrie::new();
+    assert_eq!(None, t.insert(0, ()));
+    assert_eq!(None, t.insert(1, ()));
+    assert!(t.contains(&0), "{:?}", t);
+    assert!(t.contains(&1), "{:?}", t);
+    assert!(!t.contains(&2), "{:?}", t);
+    assert!(!t.contains(&3), "{:?}", t);
+    assert!(!t.contains(&42), "{:?}", t);
+    assert!(!t.contains(&4000), "{:?}", t);
 }
