@@ -317,6 +317,82 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
         }
     }
 
+    /// Remove `key` from the trie, returning the associated value if
+    /// it was present.
+    pub fn remove(&mut self, key: &K) -> Option<V> {
+        if is_empty(self.root) { return None }
+        let mut stack = Vec::new();
+        let mut place = &mut self.root;
+        let mut level = 0;
+        while is_branch(*place) {
+            let bits = key.nibble(level);
+            if let Some(i) = bits_in_branch(*place, bits) {
+                let next = &mut twigs_of_branch(*place)[i];
+                stack.push((level, place));
+                place = next;
+                level += 1;
+            } else {
+                return None
+            }
+        }
+        if level < K::levels() {
+            match Self::tuple_of_leaf(*place) {
+                Some(&(ref other_key, _)) if key == other_key => (),
+                _ => return None,
+            }
+        }
+        stack.push((level, place));
+
+        let mut old_value = None;
+        while let Some((level,place)) = stack.pop() {
+            if is_empty(*place) { return None }
+            if is_branch(*place) {
+                let bits = key.nibble(level);
+                let bitmap = bitmap_of_branch(*place);
+                let count = bitmap.count_ones() as usize;
+                let idx = (bitmap & ((1<<bits) - 1)).count_ones() as isize;
+                let new_bitmap = bitmap & !(1<<bits);
+                assert_eq!(count, 1+new_bitmap.count_ones() as usize);
+                let p = ptr_of_branch(*place);
+                if new_bitmap == 0 {
+                    unsafe {
+                        Heap.dealloc_array(ptr::Unique::new(p).unwrap(), 1)
+                            .unwrap();
+                        *place = 0;
+                    }
+                } else {
+                    unsafe {
+                        // XXX shrink_in_place?
+                        assert_eq!(0, *p.offset(idx));
+                        ptr::copy(p.offset(1+idx),
+                                  p.offset(idx),
+                                  (count-1) - idx as usize);
+                        let new = Heap.realloc_array(ptr::Unique::new(p).unwrap(),
+                                                     count, count-1)
+                            .unwrap().as_ptr();
+                        *place = encode_branch(new_bitmap, new);
+                        // don't kill any further in this trie
+                        return old_value
+                    }
+                }
+            } else if level == K::levels() {
+                unsafe {
+                    old_value = Some(ptr::read((*place) as *const V));
+                    Heap.dealloc_one(ptr::Unique::new((*place) as *mut V).unwrap());
+                    *place = 0;
+                }
+            } else {
+                unsafe {
+                    let (_k, v) = ptr::read((*place) as *const (K,V));
+                    old_value = Some(v);
+                    Heap.dealloc_one(ptr::Unique::new(*place as *mut (K,V)).unwrap());
+                    *place = 0;
+                }
+            }
+        }
+        old_value
+    }
+
     /// Is this trie empty?
     pub fn is_empty(&self) -> bool {
         is_empty(self.root)

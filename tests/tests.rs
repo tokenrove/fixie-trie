@@ -42,6 +42,18 @@ fn full_occupancy() {
 }
 
 #[test]
+fn full_occupancy_to_empty() {
+    let mut t = FixieTrie::new();
+    for i in 0..=u16::max_value() {
+        assert_eq!(None, t.insert(i, Box::new(())));
+    }
+    for i in 0..=u16::max_value() {
+        assert!(t.remove(&i).is_some());
+    }
+    assert!(t.is_empty());
+}
+
+#[test]
 fn full_occupancy_u8() {
     let mut t = FixieTrie::new();
     for i in 0..=u8::max_value() {
@@ -146,23 +158,38 @@ quickcheck! {
         for op in ops {
             match op {
                 Insert(k) => { assert_eq!(us.insert(k, ()).is_none(), them.insert(k)) },
-                Remove(_k) => { //assert_eq!(us.remove(k), them.remove(k))
-                },
+                Remove(k) => { assert_eq!(us.remove(&k).is_some(), them.remove(&k)) },
                 Query(k) => { assert_eq!(us.contains(&k), them.contains(&k)) },
             }
         }
         us.keys().zip(them.iter()).all(|(a,&b)| a == b)
     }
 
-    fn equivalence_with_map(ops: Vec<MapOperation<u32,u64>>) -> bool {
+    // A small keyspace makes it more likely that we'll randomly get
+    // keys we've already used; it's easy to never test the insert
+    // x/remove x path otherwise.
+    fn equivalence_with_map(ops: Vec<MapOperation<u8,u64>>) -> bool {
         use self::MapOperation::*;
         let mut us = FixieTrie::new();
         let mut them = ::std::collections::btree_map::BTreeMap::new();
         for op in ops {
             match op {
-                Insert(k, v) => { assert_eq!(us.insert(k, v), them.insert(k,v)) },
-                Remove(_k) => { //assert_eq!(us.remove(k), them.remove(k))
-                },
+                Insert(k, v) => { assert_eq!(us.insert(k, v), them.insert(k, v)) },
+                Remove(k) => { assert_eq!(us.remove(&k), them.remove(&k)) },
+                Query(k) => { assert_eq!(us.get(&k), them.get(&k)) },
+            }
+        }
+        us.keys().zip(them.keys()).all(|(a,&b)| us.get(&a) == them.get(&b))
+    }
+
+    fn equivalence_with_map_large_keyspace(ops: Vec<MapOperation<u64,u32>>) -> bool {
+        use self::MapOperation::*;
+        let mut us = FixieTrie::new();
+        let mut them = ::std::collections::btree_map::BTreeMap::new();
+        for op in ops {
+            match op {
+                Insert(k, v) => { assert_eq!(us.insert(k, v), them.insert(k, v)) },
+                Remove(k) => { assert_eq!(us.remove(&k), them.remove(&k)) },
                 Query(k) => { assert_eq!(us.get(&k), them.get(&k)) },
             }
         }
