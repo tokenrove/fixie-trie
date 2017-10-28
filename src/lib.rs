@@ -82,7 +82,8 @@ fn twigs_of_branch<'a>(p: TriePtr) -> &'a mut [TriePtr] {
     unsafe { slice::from_raw_parts_mut(ptr_of_branch(p), branch_count(p)) }
 }
 
-fn encode_branch(bitmap: u16, q: TriePtr) -> TriePtr {
+fn encode_branch(bitmap: u16, q: *mut TriePtr) -> TriePtr {
+    let q = q as u64;
     assert_eq!(0, q >> 48);
     1 | q | ((bitmap as u64) << 48)
 }
@@ -107,12 +108,13 @@ fn bits_in_branch(p: TriePtr, bit: u8) -> Option<usize> {
 
 #[test]
 fn bits_in_branch_sanity_checks() {
-    assert_eq!(None, bits_in_branch(encode_branch(0,0), 0b0100));
-    assert_eq!(None, bits_in_branch(encode_branch(0b0000_0000_0001_0000, 0),
+    let p = 0 as *mut u64;
+    assert_eq!(None, bits_in_branch(encode_branch(0,p), 0b0100));
+    assert_eq!(None, bits_in_branch(encode_branch(0b0000_0000_0001_0000, p),
                                     0b0101));
-    assert_eq!(Some(0), bits_in_branch(encode_branch(0b0000_0000_0001_0000, 0),
+    assert_eq!(Some(0), bits_in_branch(encode_branch(0b0000_0000_0001_0000, p),
                                        0b0100));
-    assert_eq!(Some(4), bits_in_branch(encode_branch(0b0000_0000_0001_1111, 0),
+    assert_eq!(Some(4), bits_in_branch(encode_branch(0b0000_0000_0001_1111, p),
                                        0b0100));
 }
 
@@ -225,7 +227,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
         unsafe {
             let q = Heap.alloc_one::<TriePtr>().unwrap().as_ptr();
             ptr::write(q, mem::replace(p.as_mut().unwrap(),
-                                       encode_branch((1<<old_bits), q as TriePtr)));
+                                       encode_branch((1<<old_bits), q)));
             q
         }
     }
@@ -293,7 +295,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
                 ptr::write(new_branch.offset(new_idx), Self::new_twig(level, key, value));
                 ptr::write(new_branch.offset(old_idx), *place);
             };
-            *place = encode_branch((1<<new_bits) | (1<<old_bits), new_branch as TriePtr);
+            *place = encode_branch((1<<new_bits) | (1<<old_bits), new_branch);
         } else {
             *place = Self::new_tuple_twig(key, value);
         }
@@ -313,7 +315,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
                       new.offset(1+idx),
                       count - idx as usize);
             ptr::write(new.offset(idx), Self::new_twig(level, key, value));
-            encode_branch(bitmap, new as u64)
+            encode_branch(bitmap, new)
         }
     }
 
