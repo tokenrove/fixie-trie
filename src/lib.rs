@@ -64,7 +64,8 @@ trivial_fixed_length_key_impl! {
     i128, u128,
 }
 
-/// A popcount-array radix trie with fixed-length keys.
+/// A popcount-array radix trie with fixed-length keys.  No
+/// user-serviceable parts inside.
 pub struct FixieTrie<K, V> where K: FixedLengthKey {
     root: TriePtr,
     phantom: PhantomData<(K, V)>,
@@ -309,6 +310,9 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
         let bitmap = bitmap | 1<<bits;
         let idx = (bitmap & ((1<<bits) - 1)).count_ones() as isize;
         unsafe {
+            // I tried using Heap.grow_in_place where possible here,
+            // and it was both slower and used more memory in my
+            // tests.  To re-evaluate later.
             let new = Heap.realloc_array(ptr::Unique::new(ptr_of_branch(branch)).unwrap(), count, 1+count)
                 .unwrap().as_ptr();
             ptr::copy(new.offset(idx),
@@ -364,11 +368,13 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
                     }
                 } else {
                     unsafe {
-                        // XXX shrink_in_place?
                         assert_eq!(0, *p.offset(idx));
                         ptr::copy(p.offset(1+idx),
                                   p.offset(idx),
                                   (count-1) - idx as usize);
+                        // I tried Heap.shrink_in_place here and found
+                        // it be slower and to use no less memory.  To
+                        // re-evaluate later.
                         let new = Heap.realloc_array(ptr::Unique::new(p).unwrap(),
                                                      count, count-1)
                             .unwrap().as_ptr();
