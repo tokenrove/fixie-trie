@@ -43,11 +43,15 @@ pub trait FixedLengthKey: PartialEq + Copy {
 macro_rules! trivial_fixed_length_key_impl {
     ($($name:ident,)*) => {
         $(#[allow(trivial_numeric_casts)] impl FixedLengthKey for $name {
+            #[inline]
             fn levels() -> usize { 2 * mem::size_of::<Self>() }
+            #[inline]
             fn nibble(&self, idx: usize) -> u8 {
                 ((*self >> (4*(Self::levels()-idx-1))) & 15) as u8
             }
+            #[inline]
             fn empty() -> Self { 0 }
+            #[inline]
             fn concat_nibble(&mut self, nibble: u8) {
                 *self = (*self << 4) | (nibble as Self)
             }
@@ -71,33 +75,41 @@ pub struct FixieTrie<K, V> where K: FixedLengthKey {
     phantom: PhantomData<(K, V)>,
 }
 
+#[inline]
 fn is_empty(p: TriePtr) -> bool { 0 == p }
+#[inline]
 fn is_branch(p: TriePtr) -> bool { 1 == 1 & p }
 
+#[inline]
 fn branch_count(p: TriePtr) -> usize {
     assert!(is_branch(p));
     (p >> 48).count_ones() as usize
 }
 
+#[inline]
 fn twigs_of_branch<'a>(p: TriePtr) -> &'a mut [TriePtr] {
     unsafe { slice::from_raw_parts_mut(ptr_of_branch(p), branch_count(p)) }
 }
 
+#[inline]
 fn encode_branch(bitmap: u16, q: *mut TriePtr) -> TriePtr {
     let q = q as u64;
     assert_eq!(0, q >> 48);
     1 | q | ((bitmap as u64) << 48)
 }
 
+#[inline]
 fn bitmap_of_branch(p: TriePtr) -> u16 {
     assert!(is_branch(p));
     (p >> 48) as u16
 }
 
+#[inline]
 fn ptr_of_branch(p: TriePtr) -> *mut TriePtr {
     (p & 0x0000_ffff_ffff_fffe) as *mut TriePtr
 }
 
+#[inline]
 fn bits_in_branch(p: TriePtr, bit: u8) -> Option<usize> {
     assert!(is_branch(p));
     let map = p >> 48;
