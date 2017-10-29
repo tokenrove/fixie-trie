@@ -7,7 +7,8 @@
 
 An implementation of "fixie tries", inspired by Tony Finch's
 [qp-tries] but for fixed-length keys, storing the key implicitly in
-the trie where possible.
+the trie where possible.  Even though qp-tries were the inspiration,
+the approach is actually closer to [array mapped tries] (AMT/HAMT).
 
 You can (and should) run the benchmarks with `benchmark.sh`.  This
 should tell you at least a little about how fixie tries fare, both in
@@ -36,5 +37,9 @@ allocations.  Slab allocation or similar would probably make sense.
 It might be nice to do something like direct pointing from [poptries]
 on top, where the first _n_ bits are covered by a 2ⁿ array of tries.
 
+I discuss this structure in more detail in [an article on my blog].
+
 [qp-tries]: http://dotat.at/prog/qp/
 [poptries]: http://conferences.sigcomm.org/sigcomm/2015/pdf/papers/p57.pdf
+[array mapped tries]: https://idea.popcount.org/2012-07-25-introduction-to-hamt/
+[an article on my blog]: https://www.cipht.net/2017/10/29/fixie-tries.html
