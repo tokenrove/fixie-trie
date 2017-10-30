@@ -12,6 +12,7 @@
 #![feature(allocator_api)]
 #![feature(unique)]
 #![cfg_attr(feature = "i128", feature(i128_type))]
+#![feature(const_size_of)]
 
 use std::heap::{Heap, Alloc};
 
@@ -28,7 +29,7 @@ type TriePtr = u64;
 /// cleaner rather requiring you to mutate an instance of this.
 pub trait FixedLengthKey: PartialEq + Copy {
     /// How many nibbles are in this key?
-    fn levels() -> usize;
+    const LEVELS: usize;
     /// The `idx`th nibble.
     fn nibble(&self, idx: usize) -> u8;
     /// An empty key to be fed nibbles via `concat_nibble`.
@@ -43,11 +44,10 @@ pub trait FixedLengthKey: PartialEq + Copy {
 macro_rules! trivial_fixed_length_key_impl {
     ($($name:ident,)*) => {
         $(#[allow(trivial_numeric_casts)] impl FixedLengthKey for $name {
-            #[inline]
-            fn levels() -> usize { 2 * mem::size_of::<Self>() }
+            const LEVELS: usize = 2 * mem::size_of::<Self>();
             #[inline]
             fn nibble(&self, idx: usize) -> u8 {
-                ((*self >> (4*(Self::levels()-idx-1))) & 15) as u8
+                ((*self >> (4*(Self::LEVELS-idx-1))) & 15) as u8
             }
             #[inline]
             fn empty() -> Self { 0 }
@@ -158,7 +158,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     }
 
     fn new_twig(level: usize, key: K, value: V) -> TriePtr {
-        if level == K::levels()-1 {
+        if level == K::LEVELS-1 {
             Self::new_value(value)
         } else {
             Self::new_tuple_twig(key, value)
@@ -189,7 +189,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
         let mut p = self.root;
         let mut level = 0;
         while is_branch(p) {
-            assert!(level < K::levels());
+            assert!(level < K::LEVELS);
             if let Some(q) = Self::branch_elt(p, level, key) {
                 p = q;
             } else { return (0, level) }
@@ -201,7 +201,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     /// True if the trie contains `key`.
     pub fn contains(&self, key: &K) -> bool {
         let (p, level) = self.find_leaf_and_level(key);
-        if level == K::levels() { return true }
+        if level == K::LEVELS { return true }
         if p == 0 { return false }
 
         match Self::tuple_of_leaf(p) {
@@ -214,7 +214,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     pub fn get(&self, key: &K) -> Option<&V> {
         let (p, level) = self.find_leaf_and_level(key);
         if p == 0 { return None }
-        if level == K::levels() { return Self::value_of_leaf(p) }
+        if level == K::LEVELS { return Self::value_of_leaf(p) }
 
         match Self::tuple_of_leaf(p) {
             Some(&(ref other_key, ref value)) if key == other_key =>
@@ -227,7 +227,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
     pub fn get_mut(&mut self, key: &K) -> Option<&mut V> {
         let (p, level) = self.find_leaf_and_level(key);
         if p == 0 { return None }
-        if level == K::levels() { return Self::value_of_leaf_mut(p) }
+        if level == K::LEVELS { return Self::value_of_leaf_mut(p) }
         match Self::tuple_of_leaf_mut(p) {
             Some(&mut (ref other_key, ref mut value)) if key == other_key =>
                 Some(value),
@@ -277,7 +277,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
             }
         }
 
-        if level == K::levels() { // final level, _has_ to be just a *V
+        if level == K::LEVELS { // final level, _has_ to be just a *V
             return Self::value_of_leaf_mut(*place).map(|p| mem::replace(p, value))
         }
 
@@ -292,9 +292,9 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
                 place = unsafe { Self::leaf_into_branch(place, old_bits).as_mut().unwrap() };
                 level += 1;
             }
-            assert!(level < K::levels());
+            assert!(level < K::LEVELS);
 
-            if level == K::levels()-1 {
+            if level == K::LEVELS-1 {
                 *place = Self::tuple_into_value(*place);
             }
 
@@ -353,7 +353,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
                 return None
             }
         }
-        if level < K::levels() {
+        if level < K::LEVELS {
             match Self::tuple_of_leaf(*place) {
                 Some(&(ref other_key, _)) if key == other_key => (),
                 _ => return None,
@@ -395,7 +395,7 @@ impl<'a, K, V> FixieTrie<K, V> where K: FixedLengthKey {
                         return old_value
                     }
                 }
-            } else if level == K::levels() {
+            } else if level == K::LEVELS {
                 unsafe {
                     old_value = Some(ptr::read((*place) as *const V));
                     Heap.dealloc_one(ptr::Unique::new((*place) as *mut V).unwrap());
@@ -448,7 +448,7 @@ impl<K, V> Drop for FixieTrie<K, V> where K: FixedLengthKey {
             assert!(bits < 16);
             if is_empty(p) { continue }
             if !is_branch(p) { // leaf
-                if level < K::levels() {
+                if level < K::LEVELS {
                     unsafe {
                         let (_k,v) = ptr::read(p as *mut (K,V));
                         mem::drop(v);
@@ -515,11 +515,11 @@ impl<'a, K: 'a, V: 'a> Iterator for Iter<'a, K, V> where K: FixedLengthKey {
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(it) = self.stack.pop() {
             let mut key = it.key;
-            assert!(it.level <= K::levels());
+            assert!(it.level <= K::LEVELS);
             assert!(it.bits < 16);
             if is_empty(it.place) { return None }
             if !is_branch(it.place) { // leaf
-                let maybe_kv = if it.level == K::levels() {
+                let maybe_kv = if it.level == K::LEVELS {
                     FixieTrie::<K,V>::value_of_leaf(it.place).map(|v| (key, v))
                 } else {
                     FixieTrie::<K,V>::tuple_of_leaf(it.place).map(|kv| (kv.0, &kv.1))
