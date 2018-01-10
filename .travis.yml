@@ -3,3 +3,5 @@ rust:
   - nightly
 env:
   - QUICKCHECK_TESTS=2500
+script:
+  - cargo test --verbose --all-features
