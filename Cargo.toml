@@ -5,11 +5,11 @@ authors = ["Julian Squires <julian@cipht.net>"]
 publish = false
 
 [features]
-i128 = []
+i128 = ["quickcheck/i128", "rand/i128_support"]
 
 [dependencies]
 
 [dev-dependencies]
-quickcheck = "0.4.1"
-rand = "*"
+quickcheck = "0.6"
+rand = "0.4"
 qp-trie = "0.7.1"

@@ -1,4 +1,5 @@
 #![feature(inclusive_range_syntax)]
+#![cfg_attr(feature = "i128", feature(i128_type))]
 
 #[macro_use]
 extern crate quickcheck;
@@ -130,17 +131,8 @@ quickcheck! {
     fn u16_insertion(v: Vec<(u16,u64)>) -> bool { insertion_test_helper(v) }
     fn u32_insertion(v: Vec<(u32,u64)>) -> bool { insertion_test_helper(v) }
     fn u64_insertion(v: Vec<(u64,u64)>) -> bool { insertion_test_helper(v) }
-
     #[cfg(feature = "i128")]
-    fn u128_insertion(v: Vec<u32>) -> bool {
-        // TODO BurntSushi/quickcheck#162
-        use rand::Rng;
-        let mut gen = ::rand::thread_rng();
-        insertion_test(v.iter()
-                       .map(|value| ((gen.next_u64() as u128) << 64 |
-                                     gen.next_u64() as u128, value))
-                       .collect::<Vec<_>>())
-    }
+    fn u128_insertion(v: Vec<(u128,u128)>) -> bool { insertion_test_helper(v) }
 
     fn iteration_over_elements_in_sorted_order(v: Vec<u64>) -> bool {
         let mut t = FixieTrie::new();
