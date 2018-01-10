@@ -1,3 +1,5 @@
 language: rust
 rust:
   - nightly
+env:
+  - QUICKCHECK_TESTS=2500
