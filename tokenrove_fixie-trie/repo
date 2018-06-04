@@ -1,0 +1,42 @@
+Repo
+  { repoSshUrl = Just (URL "git@github.com:tokenrove/fixie-trie.git")
+  , repoDescription = Just "Compact tries for fixed-width keys"
+  , repoCreatedAt = Just 2017 (-05) (-23) 12 : 02 : 53 UTC
+  , repoHtmlUrl = URL "https://github.com/tokenrove/fixie-trie"
+  , repoSvnUrl = Just (URL "https://github.com/tokenrove/fixie-trie")
+  , repoForks = Just 1
+  , repoHomepage = Just ""
+  , repoFork = Just False
+  , repoGitUrl =
+      Just (URL "git://github.com/tokenrove/fixie-trie.git")
+  , repoPrivate = False
+  , repoCloneUrl =
+      Just (URL "https://github.com/tokenrove/fixie-trie.git")
+  , repoSize = Just 53
+  , repoUpdatedAt = Just 2018 (-02) (-12) 14 : 21 : 55 UTC
+  , repoWatchers = Just 21
+  , repoOwner =
+      SimpleOwner
+        { simpleOwnerId = Id 71495
+        , simpleOwnerLogin = N "tokenrove"
+        , simpleOwnerUrl = URL "https://api.github.com/users/tokenrove"
+        , simpleOwnerAvatarUrl =
+            URL "https://avatars2.githubusercontent.com/u/71495?v=4"
+        , simpleOwnerType = OwnerUser
+        }
+  , repoName = N "fixie-trie"
+  , repoLanguage = Just (Language "Rust")
+  , repoDefaultBranch = Just "master"
+  , repoPushedAt = Just 2018 (-01) (-10) 19 : 33 : 33 UTC
+  , repoId = Id 92168035
+  , repoUrl = URL "https://api.github.com/repos/tokenrove/fixie-trie"
+  , repoOpenIssues = Just 2
+  , repoHasWiki = Just True
+  , repoHasIssues = Just True
+  , repoHasDownloads = Just True
+  , repoParent = Nothing
+  , repoSource = Nothing
+  , repoHooksUrl =
+      URL "https://api.github.com/repos/tokenrove/fixie-trie/hooks"
+  , repoStargazersCount = 21
+  }

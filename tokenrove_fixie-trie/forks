@@ -1,0 +1,42 @@
+[ Repo
+    { repoSshUrl = Just (URL "git@github.com:adgear/fixie-trie.git")
+    , repoDescription = Just "Like qp-tries, but for fixed-width keys"
+    , repoCreatedAt = Just 2017 (-09) (-26) 17 : 18 : 01 UTC
+    , repoHtmlUrl = URL "https://github.com/adgear/fixie-trie"
+    , repoSvnUrl = Just (URL "https://github.com/adgear/fixie-trie")
+    , repoForks = Just 0
+    , repoHomepage = Nothing
+    , repoFork = Just True
+    , repoGitUrl = Just (URL "git://github.com/adgear/fixie-trie.git")
+    , repoPrivate = False
+    , repoCloneUrl =
+        Just (URL "https://github.com/adgear/fixie-trie.git")
+    , repoSize = Just 19
+    , repoUpdatedAt = Just 2017 (-09) (-26) 17 : 18 : 03 UTC
+    , repoWatchers = Just 0
+    , repoOwner =
+        SimpleOwner
+          { simpleOwnerId = Id 318840
+          , simpleOwnerLogin = N "adgear"
+          , simpleOwnerUrl = URL "https://api.github.com/users/adgear"
+          , simpleOwnerAvatarUrl =
+              URL "https://avatars3.githubusercontent.com/u/318840?v=4"
+          , simpleOwnerType = OwnerOrganization
+          }
+    , repoName = N "fixie-trie"
+    , repoLanguage = Just (Language "Rust")
+    , repoDefaultBranch = Just "master"
+    , repoPushedAt = Just 2017 (-09) (-26) 19 : 27 : 51 UTC
+    , repoId = Id 104915828
+    , repoUrl = URL "https://api.github.com/repos/adgear/fixie-trie"
+    , repoOpenIssues = Just 0
+    , repoHasWiki = Just True
+    , repoHasIssues = Just False
+    , repoHasDownloads = Just True
+    , repoParent = Nothing
+    , repoSource = Nothing
+    , repoHooksUrl =
+        URL "https://api.github.com/repos/adgear/fixie-trie/hooks"
+    , repoStargazersCount = 0
+    }
+]

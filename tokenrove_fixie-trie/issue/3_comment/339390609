@@ -1,0 +1,20 @@
+IssueComment
+  { issueCommentUpdatedAt = 2017 (-10) (-25) 16 : 33 : 26 UTC
+  , issueCommentUser =
+      SimpleUser
+        { simpleUserId = Id 6190260
+        , simpleUserLogin = N "fralalonde"
+        , simpleUserAvatarUrl =
+            URL "https://avatars1.githubusercontent.com/u/6190260?v=4"
+        , simpleUserUrl = URL "https://api.github.com/users/fralalonde"
+        }
+  , issueCommentUrl =
+      URL
+        "https://api.github.com/repos/tokenrove/fixie-trie/issues/comments/339390609"
+  , issueCommentHtmlUrl =
+      URL
+        "https://github.com/tokenrove/fixie-trie/pull/3#issuecomment-339390609"
+  , issueCommentCreatedAt = 2017 (-10) (-25) 16 : 33 : 26 UTC
+  , issueCommentBody = "OK!"
+  , issueCommentId = 339390609
+  }

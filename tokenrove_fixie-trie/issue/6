@@ -1,0 +1,33 @@
+Issue
+  { issueClosedAt = Nothing
+  , issueUpdatedAt = 2017 (-10) (-30) 14 : 51 : 20 UTC
+  , issueEventsUrl =
+      URL
+        "https://api.github.com/repos/tokenrove/fixie-trie/issues/6/events"
+  , issueHtmlUrl =
+      Just (URL "https://github.com/tokenrove/fixie-trie/issues/6")
+  , issueClosedBy = Nothing
+  , issueLabels = []
+  , issueNumber = 6
+  , issueAssignees = []
+  , issueUser =
+      SimpleUser
+        { simpleUserId = Id 71495
+        , simpleUserLogin = N "tokenrove"
+        , simpleUserAvatarUrl =
+            URL "https://avatars2.githubusercontent.com/u/71495?v=4"
+        , simpleUserUrl = URL "https://api.github.com/users/tokenrove"
+        }
+  , issueTitle = "Experiment with prefetching"
+  , issuePullRequest = Nothing
+  , issueUrl =
+      URL "https://api.github.com/repos/tokenrove/fixie-trie/issues/6"
+  , issueCreatedAt = 2017 (-10) (-30) 14 : 51 : 20 UTC
+  , issueBody =
+      Just
+        "Apparently [qp-tries got a big boost from explicit prefetching](https://dotat.at/prog/qp/blog-2015-10-11.html); see also the discussion on [rust-lang/rfcs#125](https://github.com/rust-lang/rfcs/pull/125), and [Khuong and Morin](https://arxiv.org/pdf/1509.05053.pdf) for some related ideas.  Need to benchmark this carefully."
+  , issueState = StateOpen
+  , issueId = Id 269628365
+  , issueComments = 0
+  , issueMilestone = Nothing
+  }

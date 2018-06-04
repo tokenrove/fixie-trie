@@ -1,0 +1,42 @@
+Issue
+  { issueClosedAt = Just 2017 (-10) (-25) 14 : 31 : 51 UTC
+  , issueUpdatedAt = 2017 (-10) (-25) 16 : 33 : 26 UTC
+  , issueEventsUrl =
+      URL
+        "https://api.github.com/repos/tokenrove/fixie-trie/issues/3/events"
+  , issueHtmlUrl =
+      Just (URL "https://github.com/tokenrove/fixie-trie/pull/3")
+  , issueClosedBy = Nothing
+  , issueLabels = []
+  , issueNumber = 3
+  , issueAssignees = []
+  , issueUser =
+      SimpleUser
+        { simpleUserId = Id 71495
+        , simpleUserLogin = N "tokenrove"
+        , simpleUserAvatarUrl =
+            URL "https://avatars2.githubusercontent.com/u/71495?v=4"
+        , simpleUserUrl = URL "https://api.github.com/users/tokenrove"
+        }
+  , issueTitle = "Update for new allocation API"
+  , issuePullRequest =
+      Just
+        PullRequestReference
+          { pullRequestReferenceHtmlUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/3")
+          , pullRequestReferencePatchUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/3.patch")
+          , pullRequestReferenceDiffUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/3.diff")
+          }
+  , issueUrl =
+      URL "https://api.github.com/repos/tokenrove/fixie-trie/issues/3"
+  , issueCreatedAt = 2017 (-10) (-24) 17 : 37 : 15 UTC
+  , issueBody =
+      Just
+        "This is my attempt at addressing #1 in a way that seems more natural with the new API.\r\n\r\nCloses #1."
+  , issueState = StateClosed
+  , issueId = Id 268122419
+  , issueComments = 1
+  , issueMilestone = Nothing
+  }

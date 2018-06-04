@@ -1,0 +1,21 @@
+IssueComment
+  { issueCommentUpdatedAt = 2017 (-10) (-03) 18 : 03 : 40 UTC
+  , issueCommentUser =
+      SimpleUser
+        { simpleUserId = Id 71495
+        , simpleUserLogin = N "tokenrove"
+        , simpleUserAvatarUrl =
+            URL "https://avatars2.githubusercontent.com/u/71495?v=4"
+        , simpleUserUrl = URL "https://api.github.com/users/tokenrove"
+        }
+  , issueCommentUrl =
+      URL
+        "https://api.github.com/repos/tokenrove/fixie-trie/issues/comments/333928740"
+  , issueCommentHtmlUrl =
+      URL
+        "https://github.com/tokenrove/fixie-trie/pull/1#issuecomment-333928740"
+  , issueCommentCreatedAt = 2017 (-10) (-03) 18 : 03 : 40 UTC
+  , issueCommentBody =
+      "FYI, I haven't forgotten about this.  I am actually going to fix this up, get it merged, put in some benchmarks, and do a writeup about this, possibly this week.  Thanks for your patience."
+  , issueCommentId = 333928740
+  }

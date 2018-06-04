@@ -1,0 +1,42 @@
+Issue
+  { issueClosedAt = Just 2017 (-10) (-31) 04 : 54 : 31 UTC
+  , issueUpdatedAt = 2017 (-10) (-31) 04 : 54 : 35 UTC
+  , issueEventsUrl =
+      URL
+        "https://api.github.com/repos/tokenrove/fixie-trie/issues/7/events"
+  , issueHtmlUrl =
+      Just (URL "https://github.com/tokenrove/fixie-trie/pull/7")
+  , issueClosedBy = Nothing
+  , issueLabels = []
+  , issueNumber = 7
+  , issueAssignees = []
+  , issueUser =
+      SimpleUser
+        { simpleUserId = Id 71495
+        , simpleUserLogin = N "tokenrove"
+        , simpleUserAvatarUrl =
+            URL "https://avatars2.githubusercontent.com/u/71495?v=4"
+        , simpleUserUrl = URL "https://api.github.com/users/tokenrove"
+        }
+  , issueTitle = "Make FixedLengthKey levels constant"
+  , issuePullRequest =
+      Just
+        PullRequestReference
+          { pullRequestReferenceHtmlUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/7")
+          , pullRequestReferencePatchUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/7.patch")
+          , pullRequestReferenceDiffUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/7.diff")
+          }
+  , issueUrl =
+      URL "https://api.github.com/repos/tokenrove/fixie-trie/issues/7"
+  , issueCreatedAt = 2017 (-10) (-30) 21 : 29 : 46 UTC
+  , issueBody =
+      Just
+        "The last time I looked at this, rust-lang/rust#29646 wasn't finished,\r\nbut now it is.  This avoids the possibility of a pathological\r\nimplementer of FixedLengthKey returning varying values for levels.\r\n\r\n(Thanks Raph!)"
+  , issueState = StateClosed
+  , issueId = Id 269760753
+  , issueComments = 0
+  , issueMilestone = Nothing
+  }

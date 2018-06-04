@@ -1,0 +1,42 @@
+Issue
+  { issueClosedAt = Just 2017 (-10) (-30) 04 : 20 : 51 UTC
+  , issueUpdatedAt = 2017 (-10) (-30) 04 : 20 : 51 UTC
+  , issueEventsUrl =
+      URL
+        "https://api.github.com/repos/tokenrove/fixie-trie/issues/5/events"
+  , issueHtmlUrl =
+      Just (URL "https://github.com/tokenrove/fixie-trie/pull/5")
+  , issueClosedBy = Nothing
+  , issueLabels = []
+  , issueNumber = 5
+  , issueAssignees = []
+  , issueUser =
+      SimpleUser
+        { simpleUserId = Id 71495
+        , simpleUserLogin = N "tokenrove"
+        , simpleUserAvatarUrl =
+            URL "https://avatars2.githubusercontent.com/u/71495?v=4"
+        , simpleUserUrl = URL "https://api.github.com/users/tokenrove"
+        }
+  , issueTitle = "Initial benchmarks"
+  , issuePullRequest =
+      Just
+        PullRequestReference
+          { pullRequestReferenceHtmlUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/5")
+          , pullRequestReferencePatchUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/5.patch")
+          , pullRequestReferenceDiffUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/5.diff")
+          }
+  , issueUrl =
+      URL "https://api.github.com/repos/tokenrove/fixie-trie/issues/5"
+  , issueCreatedAt = 2017 (-10) (-29) 12 : 35 : 46 UTC
+  , issueBody =
+      Just
+        "It would be nice to macro-ify some of the benchmark boilerplate.  Anyway, I may update this branch a few times before merging as I will be using this as the basis for a blog post about fixie tries."
+  , issueState = StateClosed
+  , issueId = Id 269395744
+  , issueComments = 0
+  , issueMilestone = Nothing
+  }

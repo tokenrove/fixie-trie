@@ -1,0 +1,33 @@
+Issue
+  { issueClosedAt = Nothing
+  , issueUpdatedAt = 2017 (-10) (-31) 05 : 04 : 13 UTC
+  , issueEventsUrl =
+      URL
+        "https://api.github.com/repos/tokenrove/fixie-trie/issues/8/events"
+  , issueHtmlUrl =
+      Just (URL "https://github.com/tokenrove/fixie-trie/issues/8")
+  , issueClosedBy = Nothing
+  , issueLabels = []
+  , issueNumber = 8
+  , issueAssignees = []
+  , issueUser =
+      SimpleUser
+        { simpleUserId = Id 71495
+        , simpleUserLogin = N "tokenrove"
+        , simpleUserAvatarUrl =
+            URL "https://avatars2.githubusercontent.com/u/71495?v=4"
+        , simpleUserUrl = URL "https://api.github.com/users/tokenrove"
+        }
+  , issueTitle = "FixieTrie should not be Sync"
+  , issuePullRequest = Nothing
+  , issueUrl =
+      URL "https://api.github.com/repos/tokenrove/fixie-trie/issues/8"
+  , issueCreatedAt = 2017 (-10) (-31) 05 : 04 : 13 UTC
+  , issueBody =
+      Just
+        "Probably should make `root` a pointer or attach some additional information to `TriePtr`."
+  , issueState = StateOpen
+  , issueId = Id 269836113
+  , issueComments = 0
+  , issueMilestone = Nothing
+  }

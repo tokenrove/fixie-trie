@@ -1,0 +1,42 @@
+Issue
+  { issueClosedAt = Just 2017 (-10) (-26) 03 : 11 : 40 UTC
+  , issueUpdatedAt = 2017 (-10) (-26) 03 : 11 : 44 UTC
+  , issueEventsUrl =
+      URL
+        "https://api.github.com/repos/tokenrove/fixie-trie/issues/4/events"
+  , issueHtmlUrl =
+      Just (URL "https://github.com/tokenrove/fixie-trie/pull/4")
+  , issueClosedBy = Nothing
+  , issueLabels = []
+  , issueNumber = 4
+  , issueAssignees = []
+  , issueUser =
+      SimpleUser
+        { simpleUserId = Id 71495
+        , simpleUserLogin = N "tokenrove"
+        , simpleUserAvatarUrl =
+            URL "https://avatars2.githubusercontent.com/u/71495?v=4"
+        , simpleUserUrl = URL "https://api.github.com/users/tokenrove"
+        }
+  , issueTitle = "Update tests before benchmarks"
+  , issuePullRequest =
+      Just
+        PullRequestReference
+          { pullRequestReferenceHtmlUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/4")
+          , pullRequestReferencePatchUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/4.patch")
+          , pullRequestReferenceDiffUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/4.diff")
+          }
+  , issueUrl =
+      URL "https://api.github.com/repos/tokenrove/fixie-trie/issues/4"
+  , issueCreatedAt = 2017 (-10) (-26) 01 : 29 : 50 UTC
+  , issueBody =
+      Just
+        "I'm about to add some benchmarks and other stuff (including remove functionality, stubbed out in the included tests), so it seems a good time to clean up a little before moving on."
+  , issueState = StateClosed
+  , issueId = Id 268601013
+  , issueComments = 0
+  , issueMilestone = Nothing
+  }

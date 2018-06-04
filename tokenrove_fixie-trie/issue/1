@@ -1,0 +1,42 @@
+Issue
+  { issueClosedAt = Just 2017 (-10) (-25) 14 : 31 : 51 UTC
+  , issueUpdatedAt = 2017 (-10) (-25) 14 : 31 : 51 UTC
+  , issueEventsUrl =
+      URL
+        "https://api.github.com/repos/tokenrove/fixie-trie/issues/1/events"
+  , issueHtmlUrl =
+      Just (URL "https://github.com/tokenrove/fixie-trie/pull/1")
+  , issueClosedBy = Nothing
+  , issueLabels = []
+  , issueNumber = 1
+  , issueAssignees = []
+  , issueUser =
+      SimpleUser
+        { simpleUserId = Id 6190260
+        , simpleUserLogin = N "fralalonde"
+        , simpleUserAvatarUrl =
+            URL "https://avatars1.githubusercontent.com/u/6190260?v=4"
+        , simpleUserUrl = URL "https://api.github.com/users/fralalonde"
+        }
+  , issueTitle = "Update allocation API calls to nightly-2017-09-10"
+  , issuePullRequest =
+      Just
+        PullRequestReference
+          { pullRequestReferenceHtmlUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/1")
+          , pullRequestReferencePatchUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/1.patch")
+          , pullRequestReferenceDiffUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/1.diff")
+          }
+  , issueUrl =
+      URL "https://api.github.com/repos/tokenrove/fixie-trie/issues/1"
+  , issueCreatedAt = 2017 (-09) (-26) 18 : 21 : 56 UTC
+  , issueBody =
+      Just
+        "A simple update to the alloc API calls so the library can build on rust `nightly-2017-09-10`.\r\n\r\nAllocation calls have been regrouped in local inline functions so can easily be updated in case this unstable API changes again.\r\n\r\nAlso added a `rust-toolchain` file as a cargo-supported \"last known building\" reference, which should ease any future nightly porting work."
+  , issueState = StateClosed
+  , issueId = Id 260721650
+  , issueComments = 1
+  , issueMilestone = Nothing
+  }

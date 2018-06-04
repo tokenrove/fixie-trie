@@ -1,0 +1,40 @@
+Issue
+  { issueClosedAt = Just 2018 (-01) (-10) 19 : 33 : 29 UTC
+  , issueUpdatedAt = 2018 (-01) (-10) 19 : 33 : 33 UTC
+  , issueEventsUrl =
+      URL
+        "https://api.github.com/repos/tokenrove/fixie-trie/issues/9/events"
+  , issueHtmlUrl =
+      Just (URL "https://github.com/tokenrove/fixie-trie/pull/9")
+  , issueClosedBy = Nothing
+  , issueLabels = []
+  , issueNumber = 9
+  , issueAssignees = []
+  , issueUser =
+      SimpleUser
+        { simpleUserId = Id 71495
+        , simpleUserLogin = N "tokenrove"
+        , simpleUserAvatarUrl =
+            URL "https://avatars2.githubusercontent.com/u/71495?v=4"
+        , simpleUserUrl = URL "https://api.github.com/users/tokenrove"
+        }
+  , issueTitle = "Use quickcheck 0.6"
+  , issuePullRequest =
+      Just
+        PullRequestReference
+          { pullRequestReferenceHtmlUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/9")
+          , pullRequestReferencePatchUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/9.patch")
+          , pullRequestReferenceDiffUrl =
+              Just (URL "https://github.com/tokenrove/fixie-trie/pull/9.diff")
+          }
+  , issueUrl =
+      URL "https://api.github.com/repos/tokenrove/fixie-trie/issues/9"
+  , issueCreatedAt = 2018 (-01) (-10) 19 : 10 : 39 UTC
+  , issueBody = Just "So we can use the i128 support."
+  , issueState = StateClosed
+  , issueId = Id 287544744
+  , issueComments = 0
+  , issueMilestone = Nothing
+  }
